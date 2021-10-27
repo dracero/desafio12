@@ -16,7 +16,7 @@ class Cart {
           const nuevoElem = {
             id: id+1,
             timestamp: Date.now(),
-            productos:[]
+            productos: [{id:0}]
            }
           await this.consulta.add(nuevoElem);
           return nuevoElem
@@ -28,14 +28,18 @@ class Cart {
   async addproduct(id,id_prod){
      try {
         let newProduct = await productos.getById(id_prod)
-        let carro = await this.showproducts(id)
-        if (carro.id !==""){
-               let index =  carro.productos.findIndex(x => x.id == id_prod);
-               if(newProduct && index === -1){ //me fijo si el producto existe y si no está en el carrito
-                        carro.productos.push(newProduct)
-                        await this.consulta.doc(carro.id).update(carro);  
-                } else return ("El producto ya está en el carrito")
-        }else  return ("El carrito noe existe")   
+        const carro = await this.consulta.doc(id).get();
+        let cart = carro.data()
+        if (cart.id !==""){
+               //let index =  cart.productos.findIndex(x => x.id == id_prod);//es para ver si el producto existe
+               console.log()
+               if(newProduct.length > 0){ //me fijo si el producto existe 
+                        const newProd = { id: id_prod}
+                        cart.productos.push(newProd)
+                        const actualizado = await this.consulta.doc(id).set(cart)
+                        return actualizado
+                } else return ("El producto no existe")
+        }else  return ("El carrito noe existe")
       } catch{
         throw new Error('Primero hay que crear un carrito') 
       } 
@@ -57,20 +61,17 @@ class Cart {
 
     async delproduct(id,id_prod){
       try {
-        let oldProduct = await productos.getById(id_prod)
-        let carrito = await this.showproducts(id)
-        if ( carrito.constructor === objectConstructor){
-               let docRef = this.consulta.doc(id)
-               let index =  docRef.productos.findIndex(x => x.id == id_prod);
-               if(oldProduct && index !== -1){ //me fijo si el producto existe y si no está en el carrito
-                  docRef.productos.splice(index,1);
-                  await docRef.set({
-                    timestamp: Date.now(),
-                    productos: docRef.productos,
-                   });
-                  return (" Se borró", oldProduct)
-                } else return ("El producto no está en el carrito")
-        }else  return ("El carrito noe existe")     
+        const carro = await this.consulta.doc(id).get();
+        let cart = carro.data()
+        if (cart.id !==""){
+               let index =  cart.productos.findIndex(x => x.id == id_prod);
+               if(index !== -1) { //me fijo si el producto está en el carrito
+                  console.log(index)
+                  cart.productos.splice(index,1);
+                  const borrado = await this.consulta.doc(id).set(cart)
+                  return borrado
+                } else return undefined
+        }else  return undefined
       } catch{
         throw new Error('Primero hay que crear un carrito') 
       } 

@@ -38,6 +38,7 @@ carritoRouter.get('/:id/productos', (req,res, next)=>{
 carritoRouter.post('/:id/productos', (req,res, next)=>{
   if (res.locals.authenticated) {  
     cart.addproduct(req.params.id,parseInt(req.query.codigo))
+    .then(updt => res.json(updt))
   } else res.json({
     error: {
       'status': -1,
